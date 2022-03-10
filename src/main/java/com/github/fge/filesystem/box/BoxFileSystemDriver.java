@@ -9,145 +9,128 @@ import java.net.URL;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.AccessMode;
 import java.nio.file.CopyOption;
-import java.nio.file.DirectoryNotEmptyException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileStore;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.NotDirectoryException;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.attribute.FileAttribute;
-import java.nio.file.spi.FileSystemProvider;
-import java.util.ArrayList;
+import java.nio.file.WatchEvent.Kind;
+import java.nio.file.WatchService;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
-import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import com.box.sdk.BoxAPIException;
 import com.box.sdk.BoxAPIRequest;
 import com.box.sdk.BoxAPIResponse;
 import com.box.sdk.BoxFile;
 import com.box.sdk.BoxFolder;
 import com.box.sdk.BoxItem;
 import com.box.sdk.UploadFileCallback;
-import com.github.fge.filesystem.driver.ExtendedFileSystemDriverBase;
-import com.github.fge.filesystem.exceptions.IsDirectoryException;
+import com.github.fge.filesystem.driver.CachedFileSystemDriver;
 import com.github.fge.filesystem.provider.FileSystemFactoryProvider;
 
-import vavi.nio.file.Cache;
 import vavi.nio.file.Util;
 import vavi.util.Debug;
 
-import static vavi.nio.file.Util.toFilenameString;
+import static com.github.fge.filesystem.box.BoxFileSystemProvider.ENV_USE_SYSTEM_WATCHER;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
+import static vavi.nio.file.Util.toFilenameString;;
+
 
 /**
  * Box filesystem driver
  *
+ * @version 0.00 2021/10/31 umjammer update <br>
  */
 @ParametersAreNonnullByDefault
 public final class BoxFileSystemDriver
-    extends ExtendedFileSystemDriverBase
-{
-    private boolean ignoreAppleDouble = false;
-    private final BoxFolder.Info rootInfo;
+    extends CachedFileSystemDriver<BoxItem.Info> {
 
-    @SuppressWarnings("unchecked")
+    private BoxWatchService systemWatcher;
+    private BoxFolder.Info rootInfo;
+
     public BoxFileSystemDriver(final FileStore fileStore,
-        final FileSystemFactoryProvider factoryProvider,
-        final BoxFolder.Info rootInfo,
-        final Map<String, ?> env)
-    {
+        FileSystemFactoryProvider factoryProvider,
+        BoxFolder.Info rootInfo,
+        Map<String, ?> env) throws IOException {
+
         super(fileStore, factoryProvider);
         this.rootInfo = Objects.requireNonNull(rootInfo);
-        ignoreAppleDouble = (Boolean) ((Map<String, Object>) env).getOrDefault("ignoreAppleDouble", Boolean.FALSE);
+        setEnv(env);
+
+        @SuppressWarnings("unchecked")
+        boolean useSystemWatcher = (Boolean) ((Map<String, Object>) env).getOrDefault(ENV_USE_SYSTEM_WATCHER, false);
+        if (useSystemWatcher) {
+            systemWatcher = new BoxWatchService(rootInfo);
+            systemWatcher.setNotificationListener(this::processNotification);
+        }
     }
 
-    private static boolean isFolder(final BoxItem.Info entry)
-    {
-        return BoxFolder.Info.class.isInstance(entry);
-    }
-
-    private static BoxFolder.Info asFolder(final BoxItem.Info entry)
-    {
-        return BoxFolder.Info.class.cast(entry);
-    }
-
-    private static boolean isFile(final BoxItem.Info entry)
-    {
-        return BoxFile.Info.class.isInstance(entry);
-    }
-
-    private static BoxFile.Info asFile(final BoxItem.Info entry)
-    {
-        return BoxFile.Info.class.cast(entry);
+    /** for system watcher */
+    private void processNotification(String id, Kind<?> kind) {
+        if (ENTRY_DELETE == kind) {
+            try {
+                Path path = cache.getEntry(e -> id.equals(e.getID()));
+                cache.removeEntry(path);
+            } catch (NoSuchElementException e) {
+Debug.println("NOTIFICATION: already deleted: " + id);
+            }
+        } else {
+            try {
+                try {
+                    Path path = cache.getEntry(e -> id.equals(e.getID()));
+Debug.println("NOTIFICATION: maybe updated: " + path);
+                    cache.removeEntry(path);
+                    cache.getEntry(path);
+                } catch (NoSuchElementException e) {
+// TODO impl
+//                    BoxItem.Info entry = BoxFile.client.files().getMetadata(pathString);
+//                    Path path = parent.resolve(pathString);
+//Debug.println("NOTIFICATION: maybe created: " + path);
+//                    cache.addEntry(path, entry);
+                }
+            } catch (NoSuchElementException e) {
+Debug.println("NOTIFICATION: parent not found: " + e);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /** */
-    private Cache<BoxItem.Info> cache = new Cache<BoxItem.Info>() {
-        /**
-         * @see #ignoreAppleDouble
-         * @throws NoSuchFileException must be thrown when the path is not found in this cache
-         */
-        public BoxItem.Info getEntry(Path path) throws IOException {
-            if (cache.containsFile(path)) {
-                return cache.getFile(path);
-            } else {
-                if (ignoreAppleDouble && path.getFileName() != null && Util.isAppleDouble(path)) {
-                    throw new NoSuchFileException("ignore apple double file: " + path);
-                }
+    private static final String[] ENTRY_FIELDS = { "name", "size", "created_at", "modified_at", "permissions" };
 
-                BoxItem.Info entry;
-                if (path.getNameCount() == 0) {
-                    entry = rootInfo;
-                } else {
-                    entry = getItem(path);
-                }
-                if (entry == null) {
-                    cache.removeEntry(path);
-                    throw new NoSuchFileException(path.toString());
-                }
-                cache.putFile(path, entry);
-                return entry;
-            }
-        }
-        BoxItem.Info getItem(final Path path) throws IOException {
-            BoxItem.Info entry = null;
-            for (int i = 0; i < path.getNameCount(); i++) {
-                Path name = path.getName(i);
-                Path sub = path.subpath(0, i + 1);
-                Path parent = sub.getParent() != null ? sub.getParent() : path.getFileSystem().getPath("/");
-                List<Path> bros = getDirectoryEntries(parent, false);
-                Optional<Path> found = bros.stream().filter(p -> p.getFileName().equals(name)).findFirst();
-                if (!found.isPresent()) {
-                    return null;
-                } else {
-                    entry = getFile(found.get());
-                }
-            }
-            return entry;
-        }
-    };
+    private static BoxFolder.Info asFolder(BoxItem.Info entry) {
+        return BoxFolder.Info.class.cast(entry);
+    }
 
-    @Nonnull
+    private static BoxFile.Info asFile(BoxItem.Info entry) {
+        return BoxFile.Info.class.cast(entry);
+    }
+
     @Override
-    public InputStream newInputStream(final Path path,
-        final Set<? extends OpenOption> options)
-        throws IOException
-    {
-        final BoxItem.Info entry = cache.getEntry(path);
+    protected String getFilenameString(BoxItem.Info entry) {
+        return entry.getName();
+    }
 
-        if (isFolder(entry)) {
-            throw new IsDirectoryException(path.toString());
-        }
+    @Override
+    protected boolean isFolder(BoxItem.Info entry) {
+        return BoxFolder.Info.class.isInstance(entry);
+    }
 
+    @Override
+    protected BoxItem.Info getRootEntry(Path root) throws IOException {
+        return rootInfo;
+    }
+
+    @Override
+    protected InputStream downloadEntry(BoxItem.Info entry, Path path, Set<? extends OpenOption> options) throws IOException {
         BoxFile file = asFile(entry).getResource();
         URL url = BoxFile.CONTENT_URL_TEMPLATE.build(file.getAPI().getBaseURL(), file.getID());
         BoxAPIRequest request = new BoxAPIRequest(file.getAPI(), url, "GET");
@@ -160,31 +143,9 @@ public final class BoxFileSystemDriver
         }, Util.BUFFER_SIZE);
     }
 
-    @Nonnull
     @Override
-    public OutputStream newOutputStream(final Path path,
-        final Set<? extends OpenOption> options)
-        throws IOException
-    {
-        try {
-            BoxItem.Info entry = cache.getEntry(path);
-
-            if (isFolder(entry)) {
-                throw new IsDirectoryException(path.toString());
-            } else {
-                // TODO accept?
-                throw new FileAlreadyExistsException(path.toString());
-            }
-        } catch (NoSuchFileException e) {
-Debug.println("newOutputStream: " + e.getMessage());
-        }
-
-        return uploadEntry(path);
-    }
-
-    /** */
-    private OutputStream uploadEntry(Path path) throws IOException {
-        return new BufferedOutputStream(new Util.StrealingOutputStreamForUploading<BoxItem.Info>() {
+    protected OutputStream uploadEntry(BoxItem.Info parentEntry, Path path, Set<? extends OpenOption> options) throws IOException {
+        return new BufferedOutputStream(new Util.StealingOutputStreamForUploading<BoxItem.Info>() {
             @Override
             protected BoxItem.Info upload() throws IOException {
                 UploadFileCallback callback = new UploadFileCallback() {
@@ -193,144 +154,93 @@ Debug.println("newOutputStream: " + e.getMessage());
                         setOutputStream(os);
                     }
                 };
-                BoxItem.Info parentEntry = cache.getEntry(path.getParent());
                 BoxFolder parent = asFolder(parentEntry).getResource();
                 return parent.uploadFile(callback, toFilenameString(path));
             }
 
             @Override
             protected void onClosed(BoxItem.Info newEntry) {
-                cache.addEntry(path, newEntry);
+                updateEntry(path, newEntry);
             }
         }, Util.BUFFER_SIZE);
     }
 
-    @Nonnull
     @Override
-    public DirectoryStream<Path> newDirectoryStream(final Path dir,
-        final DirectoryStream.Filter<? super Path> filter)
-        throws IOException
-    {
-        return Util.newDirectoryStream(getDirectoryEntries(dir, true), filter);
+    protected List<BoxItem.Info> getDirectoryEntries(BoxItem.Info dirEntry, Path dir) throws IOException {
+Debug.println(Level.FINE, dirEntry.getName());
+        Iterable<BoxItem.Info> i = asFolder(dirEntry).getResource().getChildren(ENTRY_FIELDS);
+        return StreamSupport.stream(i.spliterator(), false).collect(Collectors.toList()); 
     }
 
     @Override
-    public void createDirectory(final Path dir, final FileAttribute<?>... attrs)
-        throws IOException
-    {
-        try {
-            final BoxItem.Info parentEntry = cache.getEntry(dir.getParent());
-            BoxItem.Info newEntry = asFolder(parentEntry).getResource().createFolder(toFilenameString(dir));
-            cache.addEntry(dir, newEntry);
-        } catch (BoxAPIException e) {
-            throw new IOException(e);
-        }
+    protected BoxItem.Info createDirectoryEntry(BoxItem.Info parentEntry, Path dir) throws IOException {
+        return asFolder(parentEntry).getResource().createFolder(toFilenameString(dir));
     }
 
     @Override
-    public void delete(final Path path)
-        throws IOException
-    {
-        removeEntry(path);
+    protected boolean hasChildren(BoxItem.Info dirEntry, Path dir) throws IOException {
+        return getDirectoryEntries(dir, false).size() > 0;
     }
 
     @Override
-    public void copy(final Path source, final Path target,
-        final Set<CopyOption> options)
-        throws IOException
-    {
-        if (cache.existsEntry(target)) {
-            if (options != null && options.stream().anyMatch(o -> o.equals(StandardCopyOption.REPLACE_EXISTING))) {
-                removeEntry(target);
-            } else {
-                throw new FileAlreadyExistsException(target.toString());
-            }
-        }
-        copyEntry(source, target);
-    }
-
-    /**
-     * Move a file, or empty directory, from one path to another on this
-     * file system
-     *
-     * @param source the source path
-     * @param target the target path
-     * @param options the copy options
-     * @throws IOException file system level error, or a plain I/O error
-     * @see FileSystemProvider#move(Path, Path, CopyOption...)
-     */
-    // TODO: factorize code
-    // TODO: far from being optimized
-    // TODO: metadata driver! Again
-    @Override
-    public void move(final Path source, final Path target,
-        final Set<CopyOption> options)
-        throws IOException
-    {
-        if (cache.existsEntry(target)) {
-            if (isFolder(cache.getEntry(target))) {
-                if (options != null && options.stream().anyMatch(o -> o.equals(StandardCopyOption.REPLACE_EXISTING))) {
-                    // replace the target
-                    if (cache.getChildCount(target) > 0) {
-                        throw new DirectoryNotEmptyException(target.toString());
-                    } else {
-                        removeEntry(target);
-                        moveEntry(source, target, false);
-                    }
-                } else {
-                    // move into the target
-                    // TODO SPEC is FileAlreadyExistsException ?
-                    moveEntry(source, target, true);
-                }
-            } else {
-                if (options != null && options.stream().anyMatch(o -> o.equals(StandardCopyOption.REPLACE_EXISTING))) {
-                    removeEntry(target);
-                    moveEntry(source, target, false);
-                } else {
-                    throw new FileAlreadyExistsException(target.toString());
-                }
-            }
+    protected void removeEntry(BoxItem.Info entry, Path path) throws IOException {
+        if (isFolder(entry)) {
+            asFolder(entry).getResource().delete(false);
         } else {
-            if (source.getParent().equals(target.getParent())) {
-                // rename
-                renameEntry(source, target);
-            } else {
-                moveEntry(source, target, false);
-            }
+            asFile(entry).getResource().delete();
         }
     }
 
     @Override
-    protected void checkAccessImpl(final Path path, final AccessMode... modes)
-        throws IOException
-    {
-        final BoxItem.Info entry = cache.getEntry(path);
+    protected BoxItem.Info copyEntry(BoxItem.Info sourceEntry, BoxItem.Info targetParentEntry, Path source, Path target, Set<CopyOption> options) throws IOException {
+        return asFile(sourceEntry).getResource().copy(asFolder(targetParentEntry).getResource(), toFilenameString(target));
+    }
+
+    @Override
+    protected BoxItem.Info moveEntry(BoxItem.Info sourceEntry, BoxItem.Info targetParentEntry, Path source, Path target, boolean targetIsParent) throws IOException {
+        if (targetIsParent) {
+            return asFile(sourceEntry).getResource().move(asFolder(targetParentEntry).getResource());
+        } else {
+            return asFile(sourceEntry).getResource().move(asFolder(targetParentEntry).getResource(), toFilenameString(target));
+        }
+    }
+
+    @Override
+    protected BoxItem.Info moveFolderEntry(BoxItem.Info sourceEntry, BoxItem.Info targetParentEntry, Path source, Path target, boolean targetIsParent) throws IOException {
+        BoxItem.Info patchedEntry = asFolder(sourceEntry).getResource().move(asFolder(targetParentEntry).getResource(), toFilenameString(target));
+Debug.println(patchedEntry.getID() + ", " + patchedEntry.getParent().getName() + "/" + patchedEntry.getName());
+        return patchedEntry;
+    }
+
+    @Override
+    protected BoxItem.Info renameEntry(BoxItem.Info sourceEntry, BoxItem.Info targetParentEntry, Path source, Path target) throws IOException {
+        return asFile(sourceEntry).getResource().move(asFolder(targetParentEntry).getResource(), toFilenameString(target));
+    }
+
+    @Override
+    protected void checkAccessEntry(BoxItem.Info entry, Path path, AccessMode... modes) throws IOException {
 
         final Set<AccessMode> set = EnumSet.noneOf(AccessMode.class);
 
-        if (!isFile(entry)) {
-            return;
-        } else {
-            EnumSet<BoxFile.Permission> permissions = asFile(entry).getPermissions();
-            if (permissions != null) {
-                for (AccessMode mode : modes) {
-                    switch (mode) {
-                    case READ:
-                        if (!permissions.contains(BoxFile.Permission.CAN_DOWNLOAD)) {
-                            set.add(AccessMode.READ);
-                        }
-                        break;
-                    case WRITE:
-                        if (!permissions.contains(BoxFile.Permission.CAN_UPLOAD)) {
-                            set.add(AccessMode.WRITE);
-                        }
-                        break;
-                    case EXECUTE:
-                        if (!permissions.contains(BoxFile.Permission.CAN_DOWNLOAD)) {
-                            set.add(AccessMode.EXECUTE);
-                        }
-                        break;
+        EnumSet<BoxFile.Permission> permissions = asFile(entry).getPermissions();
+        if (permissions != null) {
+            for (AccessMode mode : modes) {
+                switch (mode) {
+                case READ:
+                    if (!permissions.contains(BoxFile.Permission.CAN_DOWNLOAD)) {
+                        set.add(AccessMode.READ);
                     }
+                    break;
+                case WRITE:
+                    if (!permissions.contains(BoxFile.Permission.CAN_UPLOAD)) {
+                        set.add(AccessMode.WRITE);
+                    }
+                    break;
+                case EXECUTE:
+                    if (!permissions.contains(BoxFile.Permission.CAN_DOWNLOAD)) {
+                        set.add(AccessMode.EXECUTE);
+                    }
+                    break;
                 }
             }
         }
@@ -340,116 +250,12 @@ Debug.println("newOutputStream: " + e.getMessage());
         }
     }
 
-    @Nonnull
     @Override
-    protected BoxItem.Info getPathMetadataImpl(final Path path)
-        throws IOException
-    {
-        // TODO: when symlinks are supported this may turn out to be wrong
-        return cache.getEntry(path);
-    }
-
-    /**
-     * Closes this stream and releases any system resources associated
-     * with it. If the stream is already closed then invoking this
-     * method has no effect.
-     *
-     * @throws IOException if an I/O error occurs
-     */
-    @Override
-    public void close()
-        throws IOException
-    {
-        // TODO! Is there anything to be done here?
-    }
-
-    /** */
-    private List<Path> getDirectoryEntries(Path dir, boolean useCache) throws IOException {
-        final BoxItem.Info entry = cache.getEntry(dir);
-
-        if (!isFolder(entry)) {
-            throw new NotDirectoryException(dir.toString());
+    public WatchService newWatchService() {
+        try {
+            return new BoxWatchService(rootInfo);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
         }
-
-        List<Path> list = null;
-        if (useCache && cache.containsFolder(dir)) {
-            list = cache.getFolder(dir);
-        } else {
-            list = new ArrayList<>();
-
-            for (final BoxItem.Info childEntry : asFolder(entry).getResource().getChildren("name", "size", "created_at", "modified_at", "permissions")) {
-                Path childPath = dir.resolve(childEntry.getName());
-                list.add(childPath);
-                cache.putFile(childPath, childEntry);
-            }
-            cache.putFolder(dir, list);
-        }
-
-        return list;
-    }
-
-    /** */
-    private void removeEntry(Path path) throws IOException {
-        BoxItem.Info entry = cache.getEntry(path);
-        if (isFolder(entry)) {
-            if (getDirectoryEntries(path, false).size() > 0) {
-                throw new DirectoryNotEmptyException(path.toString());
-            }
-            asFolder(entry).getResource().delete(false);
-        } else {
-            asFile(entry).getResource().delete();
-        }
-
-        cache.removeEntry(path);
-    }
-
-    /** */
-    private void copyEntry(final Path source, final Path target) throws IOException {
-        BoxItem.Info sourceEntry = cache.getEntry(source);
-        if (isFile(sourceEntry)) {
-            BoxItem.Info parentEntry = cache.getEntry(source.getParent());
-            BoxItem.Info newEntry = asFile(sourceEntry).getResource().copy(asFolder(parentEntry).getResource(), toFilenameString(target));
-            cache.addEntry(target, newEntry);
-        } else if (isFolder(sourceEntry)) {
-            // TODO java spec. allows empty folder
-            throw new IsDirectoryException("source can not be a folder: " + source);
-        }
-    }
-
-    /**
-     * @param targetIsParent if the target is folder
-     */
-    private void moveEntry(final Path source, final Path target, boolean targetIsParent) throws IOException {
-        BoxItem.Info sourceEntry = cache.getEntry(source);
-        if (isFile(sourceEntry)) {
-            BoxItem.Info parentEntry = cache.getEntry(targetIsParent ? target : target.getParent());
-            BoxItem.Info patchedEntry;
-            if (targetIsParent) {
-                patchedEntry = asFile(sourceEntry).getResource().move(asFolder(parentEntry).getResource());
-            } else {
-                patchedEntry = asFile(sourceEntry).getResource().move(asFolder(parentEntry).getResource(), toFilenameString(target));
-            }
-            cache.removeEntry(source);
-            if (targetIsParent) {
-                cache.addEntry(target.resolve(source.getFileName()), patchedEntry);
-            } else {
-                cache.addEntry(target, patchedEntry);
-            }
-        } else if (isFolder(sourceEntry)) {
-            BoxItem.Info parentEntry = cache.getEntry(target.getParent());
-            BoxItem.Info patchedEntry = asFolder(sourceEntry).getResource().move(asFolder(parentEntry).getResource(), toFilenameString(target));
-Debug.println(patchedEntry.getID() + ", " + patchedEntry.getParent().getName() + "/" + patchedEntry.getName());
-            cache.moveEntry(source, target, patchedEntry);
-        }
-    }
-
-    /** */
-    private void renameEntry(final Path source, final Path target) throws IOException {
-        BoxItem.Info sourceEntry = cache.getEntry(source);
-
-        BoxItem.Info parentEntry = cache.getEntry(target.getParent());
-        BoxItem.Info patchedEntry = asFile(sourceEntry).getResource().move(asFolder(parentEntry).getResource(), toFilenameString(target));
-        cache.removeEntry(source);
-        cache.addEntry(target, patchedEntry);
     }
 }

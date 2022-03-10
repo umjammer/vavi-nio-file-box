@@ -5,7 +5,7 @@
 
   <groupId>com.github.fge</groupId>
   <artifactId>java7-fs-box</artifactId>
-  <version>0.1.12v</version>
+  <version>0.1.13v</version>
 
   <name>java7-fs-box</name>
   <scm>
@@ -15,7 +15,7 @@
 
   <properties>
     <vavi-nio-file.groupId>com.github.umjammer</vavi-nio-file.groupId>
-    <vavi-nio-file.version>0.0.12</vavi-nio-file.version>
+    <vavi-nio-file.version>0.0.13</vavi-nio-file.version>
   </properties>
 
   <profiles>
@@ -61,6 +61,7 @@
                 <TEST_CLIENT_ID>${test.client_id}</TEST_CLIENT_ID>
                 <TEST_CLIENT_SECRET>${test.client_secret}</TEST_CLIENT_SECRET>
                 <TEST_REDIRECT_URL>${test.redirect_url}</TEST_REDIRECT_URL>
+                <TEST_SCOPES>${test.scopes}</TEST_SCOPES>
                 <BOX_DEVELOPER_TOKEN>${box.developer_token}</BOX_DEVELOPER_TOKEN>
               </environmentVariables>
               <argLine>
@@ -86,7 +87,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.22.2</version>
+            <version>3.0.0-M5</version>
             <configuration>
               <argLine>-Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties</argLine>
               <trimStackTrace>false</trimStackTrace>
@@ -118,24 +119,41 @@
     </repository>
   </repositories>
 
-  <dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>5.8.1</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
+  <dependencies>
     <dependency>
       <groupId>com.box</groupId>
       <artifactId>box-java-sdk</artifactId>
-      <version>2.47.0</version>
+      <version>2.57.0</version>
     </dependency>
 
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>java7-fs-base</artifactId>
-      <version>0.0.10v</version>
+      <version>0.0.12v</version>
     </dependency>
 
     <dependency>
       <groupId>com.github.umjammer.vavi-net-auth</groupId>
       <artifactId>vavi-net-auth-box</artifactId>
-      <version>0.1.2</version>
+      <version>0.1.4</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.umjammer.vavi-apps-fuse</groupId>
+      <artifactId>vavi-nio-file-commons</artifactId>
+      <version>0.1.7</version>
     </dependency>
 
     <dependency>
@@ -145,21 +163,24 @@
     </dependency>
 
     <dependency>
+      <groupId>org.eclipse.jetty.websocket</groupId>
+      <artifactId>javax-websocket-client-impl</artifactId>
+      <version>9.4.30.v20200611</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
-      <version>5.3.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <version>5.3.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-commons</artifactId>
-      <version>1.5.2</version>
       <scope>test</scope>
     </dependency>
 
