@@ -23,7 +23,6 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.box.sdk.BoxAPIRequest;
@@ -34,13 +33,12 @@ import com.box.sdk.BoxItem;
 import com.box.sdk.UploadFileCallback;
 import com.github.fge.filesystem.driver.DoubleCachedFileSystemDriver;
 import com.github.fge.filesystem.provider.FileSystemFactoryProvider;
-
 import vavi.nio.file.Util;
 import vavi.util.Debug;
 
 import static com.github.fge.filesystem.box.BoxFileSystemProvider.ENV_USE_SYSTEM_WATCHER;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
-import static vavi.nio.file.Util.toFilenameString;;
+import static vavi.nio.file.Util.toFilenameString;
 
 
 /**
@@ -106,11 +104,11 @@ Debug.println("NOTIFICATION: parent not found: " + e);
     private static final String[] ENTRY_FIELDS = { "name", "size", "created_at", "modified_at", "permissions" };
 
     private static BoxFolder.Info asFolder(BoxItem.Info entry) {
-        return BoxFolder.Info.class.cast(entry);
+        return (BoxFolder.Info) entry;
     }
 
     private static BoxFile.Info asFile(BoxItem.Info entry) {
-        return BoxFile.Info.class.cast(entry);
+        return (BoxFile.Info) entry;
     }
 
     @Override
@@ -120,7 +118,7 @@ Debug.println("NOTIFICATION: parent not found: " + e);
 
     @Override
     protected boolean isFolder(BoxItem.Info entry) {
-        return BoxFolder.Info.class.isInstance(entry);
+        return entry instanceof BoxFolder.Info;
     }
 
     @Override
@@ -147,12 +145,7 @@ Debug.println("NOTIFICATION: parent not found: " + e);
         return new BufferedOutputStream(new Util.StealingOutputStreamForUploading<BoxItem.Info>() {
             @Override
             protected BoxItem.Info upload() throws IOException {
-                UploadFileCallback callback = new UploadFileCallback() {
-                    @Override
-                    public void writeToStream(OutputStream os) throws IOException {
-                        setOutputStream(os);
-                    }
-                };
+                UploadFileCallback callback = this::setOutputStream;
                 BoxFolder parent = asFolder(parentEntry).getResource();
                 return parent.uploadFile(callback, toFilenameString(path));
             }
