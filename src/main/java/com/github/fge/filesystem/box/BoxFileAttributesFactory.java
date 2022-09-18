@@ -1,10 +1,10 @@
 package com.github.fge.filesystem.box;
 
 import com.box.sdk.BoxItem;
-import com.github.fge.filesystem.driver.ExtendedFileSystemDriverBase.ExtendsdFileAttributesFactory;
+import com.github.fge.filesystem.driver.ExtendedFileSystemDriverBase.ExtendedFileAttributesFactory;
 
 public final class BoxFileAttributesFactory
-    extends ExtendsdFileAttributesFactory
+    extends ExtendedFileAttributesFactory
 {
     public BoxFileAttributesFactory()
     {

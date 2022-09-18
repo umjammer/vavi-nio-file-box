@@ -32,7 +32,7 @@ import com.box.sdk.BoxFile;
 import com.box.sdk.BoxFolder;
 import com.box.sdk.BoxItem;
 import com.box.sdk.UploadFileCallback;
-import com.github.fge.filesystem.driver.CachedFileSystemDriver;
+import com.github.fge.filesystem.driver.DoubleCachedFileSystemDriver;
 import com.github.fge.filesystem.provider.FileSystemFactoryProvider;
 
 import vavi.nio.file.Util;
@@ -49,8 +49,7 @@ import static vavi.nio.file.Util.toFilenameString;;
  * @version 0.00 2021/10/31 umjammer update <br>
  */
 @ParametersAreNonnullByDefault
-public final class BoxFileSystemDriver
-    extends CachedFileSystemDriver<BoxItem.Info> {
+public final class BoxFileSystemDriver extends DoubleCachedFileSystemDriver<BoxItem.Info> {
 
     private BoxWatchService systemWatcher;
     private BoxFolder.Info rootInfo;
@@ -130,7 +129,7 @@ Debug.println("NOTIFICATION: parent not found: " + e);
     }
 
     @Override
-    protected InputStream downloadEntry(BoxItem.Info entry, Path path, Set<? extends OpenOption> options) throws IOException {
+    protected InputStream downloadEntryImpl(BoxItem.Info entry, Path path, Set<? extends OpenOption> options) throws IOException {
         BoxFile file = asFile(entry).getResource();
         URL url = BoxFile.CONTENT_URL_TEMPLATE.build(file.getAPI().getBaseURL(), file.getID());
         BoxAPIRequest request = new BoxAPIRequest(file.getAPI(), url, "GET");
