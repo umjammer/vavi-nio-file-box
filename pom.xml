@@ -91,6 +91,7 @@
             <version>3.0.0-M7</version>
             <configuration>
               <argLine>-Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties</argLine>
+              <argLine>-Dvavi.util.logging.VaviFormatter.extraClassMethod="com\.box\.sdk\.BoxLogger#(log|warn)"</argLine>
               <trimStackTrace>false</trimStackTrace>
             </configuration>
           </plugin>
