@@ -15,8 +15,8 @@
 
   <properties>
     <!-- com.github.umjammer -->
-    <vavi-nio-file.groupId>vavi</vavi-nio-file.groupId>
-    <vavi-nio-file.version>0.0.14-SNAPSHOT</vavi-nio-file.version>
+    <vavi-nio-file.groupId>com.github.umjammer</vavi-nio-file.groupId>
+    <vavi-nio-file.version>0.0.14</vavi-nio-file.version>
   </properties>
 
   <profiles>
@@ -127,7 +127,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.8.2</version>
+        <version>5.9.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -138,13 +138,13 @@
     <dependency>
       <groupId>com.box</groupId>
       <artifactId>box-java-sdk</artifactId>
-      <version>3.6.0</version>
+      <version>3.7.1</version>
     </dependency>
 
     <dependency>
-      <groupId>com.github.fge</groupId>
+      <groupId>com.github.umjammer</groupId>
       <artifactId>java7-fs-base</artifactId>
-      <version>0.0.13v-SNAPSHOT</version>
+      <version>0.0.13v</version>
     </dependency>
 
     <dependency>
@@ -169,7 +169,7 @@
     <dependency>
       <groupId>org.eclipse.jetty.websocket</groupId>
       <artifactId>javax-websocket-client-impl</artifactId>
-      <version>9.4.48.v20220622</version>
+      <version>9.4.49.v20220914</version>
     </dependency>
 
     <dependency>
@@ -195,6 +195,7 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>com.rainerhahnekamp</groupId>
       <artifactId>sneakythrow</artifactId>
