@@ -1,5 +1,6 @@
 package com.github.fge.filesystem.box;
 
+import com.github.fge.filesystem.driver.DoubleCachedFileSystemDriver;
 import com.github.fge.filesystem.provider.FileSystemProviderBase;
 
 public final class BoxFileSystemProvider
@@ -14,6 +15,8 @@ public final class BoxFileSystemProvider
     public static final String ENV_IGNORE_APPLE_DOUBLE = "ignoreAppleDouble";
 
     public static final String ENV_USE_SYSTEM_WATCHER = "use_system_watcher";
+
+    public static final String ENV_DISABLED_FILE_CACHE = DoubleCachedFileSystemDriver.ENV_DISABLED_FILE_CACHE;
 
     public BoxFileSystemProvider()
     {

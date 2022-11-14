@@ -5,7 +5,7 @@
 
   <groupId>com.github.fge</groupId>
   <artifactId>java7-fs-box</artifactId>
-  <version>0.1.13v</version>
+  <version>0.1.14v</version>
 
   <name>java7-fs-box</name>
   <scm>
@@ -14,8 +14,9 @@
   <url>https://github.com/umjammer/java7-fs-box</url>
 
   <properties>
+    <!-- com.github.umjammer -->
     <vavi-nio-file.groupId>com.github.umjammer</vavi-nio-file.groupId>
-    <vavi-nio-file.version>0.0.13</vavi-nio-file.version>
+    <vavi-nio-file.version>0.0.14</vavi-nio-file.version>
   </properties>
 
   <profiles>
@@ -53,7 +54,7 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.22.2</version>
+            <version>3.0.0-M7</version>
             <configuration>
               <environmentVariables>
                 <TEST_ACCOUNT>${test.account}</TEST_ACCOUNT>
@@ -87,9 +88,10 @@
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>3.0.0-M5</version>
+            <version>3.0.0-M7</version>
             <configuration>
               <argLine>-Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties</argLine>
+              <argLine>-Dvavi.util.logging.VaviFormatter.extraClassMethod="com\.box\.sdk\.BoxLogger#(log|warn)"</argLine>
               <trimStackTrace>false</trimStackTrace>
             </configuration>
           </plugin>
@@ -101,8 +103,9 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.3</version>
+        <version>3.10.1</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
@@ -124,7 +127,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.8.1</version>
+        <version>5.9.1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -135,25 +138,26 @@
     <dependency>
       <groupId>com.box</groupId>
       <artifactId>box-java-sdk</artifactId>
-      <version>2.57.0</version>
+      <version>3.7.1</version>
     </dependency>
 
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>java7-fs-base</artifactId>
-      <version>0.0.12v</version>
+      <version>0.0.13v</version>
     </dependency>
 
     <dependency>
       <groupId>com.github.umjammer.vavi-net-auth</groupId>
       <artifactId>vavi-net-auth-box</artifactId>
-      <version>0.1.4</version>
+      <version>0.1.5</version>
     </dependency>
 
     <dependency>
+      <!-- com.github.umjammer.vavi-apps-fuse -->
       <groupId>com.github.umjammer.vavi-apps-fuse</groupId>
       <artifactId>vavi-nio-file-commons</artifactId>
-      <version>0.1.7</version>
+      <version>0.1.8</version>
     </dependency>
 
     <dependency>
@@ -165,7 +169,7 @@
     <dependency>
       <groupId>org.eclipse.jetty.websocket</groupId>
       <artifactId>javax-websocket-client-impl</artifactId>
-      <version>9.4.30.v20200611</version>
+      <version>9.4.49.v20220914</version>
     </dependency>
 
     <dependency>
@@ -191,6 +195,7 @@
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>com.rainerhahnekamp</groupId>
       <artifactId>sneakythrow</artifactId>

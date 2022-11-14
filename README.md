@@ -1,4 +1,8 @@
-[![Release](https://jitpack.io/v/umjammer/java7-fs-box.svg)](https://jitpack.io/#umjammer/java7-fs-box) [![Actions Status](https://github.com/umjammer/java7-fs-box/workflows/Java%20CI/badge.svg)](https://github.com/umjammer/java7-fs-box/actions) [![Parent](https://img.shields.io/badge/Parent-vavi--apps--fuse-pink)](https://github.com/umjammer/vavi-apps-fuse)
+[![Release](https://jitpack.io/v/umjammer/java7-fs-box.svg)](https://jitpack.io/#umjammer/java7-fs-box)
+[![Actions Status](https://github.com/umjammer/java7-fs-box/workflows/Java%20CI/badge.svg)](https://github.com/umjammer/java7-fs-box/actions)
+[![CodeQL](https://github.com/umjammer/java7-fs-box/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/java7-fs-box/actions/workflows/codeql-analysis.yml)
+![Java](https://img.shields.io/badge/Java-8-b07219)
+[![Parent](https://img.shields.io/badge/Parent-vavi--apps--fuse-pink)](https://github.com/umjammer/vavi-apps-fuse)
 
 ## java7-fs-box
 
@@ -21,7 +25,7 @@ API](https://github.com/box/box-java-sdk).
 
  * https://jitpack.io/#umjammer/java7-fs-box
 
-### selenium chrome driver
+### ~~selenium chrome driver~~ (obsolete, use os default browser)
 
  * Download the [chromedriver executable](https://chromedriver.chromium.org/downloads) and locate it into some directory.
    * Don't forget to run jvm with jvm argument `-Dwebdriver.chrome.driver=/usr/local/bin/chromedriver`.

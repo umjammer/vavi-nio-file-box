@@ -42,6 +42,7 @@ class Test1 {
         String email = System.getenv("TEST_ACCOUNT");
 
         Map<String, Object> env = new HashMap<>();
+        env.put(BoxFileSystemProvider.ENV_DISABLED_FILE_CACHE, true);
         env.put(BoxFileSystemProvider.ENV_APP_CREDENTIAL, new BoxTestAppCredential());
         env.put(BoxFileSystemProvider.ENV_USER_CREDENTIAL, new BoxTestUserCredential(email));
 
@@ -63,6 +64,7 @@ class Test1 {
         System.setProperty("vavi.nio.file.box.BoxFileSystemRepository.oauth2", "vavi.net.auth.oauth2.box.BoxDevOAuth2");
 
         Map<String, Object> env = new HashMap<>();
+        env.put(BoxFileSystemProvider.ENV_DISABLED_FILE_CACHE, true);
         env.put(BoxFileSystemProvider.ENV_APP_CREDENTIAL, new DummyAppCredential());
         env.put(BoxFileSystemProvider.ENV_USER_CREDENTIAL, new DummyUserCredential());
 
