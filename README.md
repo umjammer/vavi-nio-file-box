@@ -1,29 +1,20 @@
-[![Release](https://jitpack.io/v/umjammer/java7-fs-box.svg)](https://jitpack.io/#umjammer/java7-fs-box)
-[![Actions Status](https://github.com/umjammer/java7-fs-box/workflows/Java%20CI/badge.svg)](https://github.com/umjammer/java7-fs-box/actions)
-[![CodeQL](https://github.com/umjammer/java7-fs-box/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/java7-fs-box/actions/workflows/codeql-analysis.yml)
-![Java](https://img.shields.io/badge/Java-8-b07219)
+[![Release](https://jitpack.io/v/umjammer/vavi-nio-file-box.svg)](https://jitpack.io/#umjammer/vavi-nio-file-box)
+[![Java CI](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/vavi-nio-file-box/actions)
+[![CodeQL](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/codeql-analysis.yml)
+![Java](https://img.shields.io/badge/Java-17-b07219)
 [![Parent](https://img.shields.io/badge/Parent-vavi--apps--fuse-pink)](https://github.com/umjammer/vavi-apps-fuse)
 
-## java7-fs-box
+## vavi-nio-file-box
 
-This project is licensed under both LGPLv3 and ASL 2.0. See file LICENSE for more details.
+Java filesystem SPI ([JSR-203](https://jcp.org/en/jsr/detail?id=203)) over [DropBox](https://dropbox.com) API.
 
-## What this is
-
-This is an implementation of a Java 7
-[`FileSystem`](https://docs.oracle.com/javase/7/docs/api/java/nio/file/FileSystem.html) over
-[Box.com](https://box.com). This implementation is based on
-[java7-fs-base](https://github.com/fge/java7-fs-base).
-
-Note that it does not make use of the Android SDK (see
-[here](https://github.com/box/box-java-sdk-v2) but of the [new
-API](https://github.com/box/box-java-sdk).
+[original](https://github.com/fge/java7-fs-box)
 
 ## Install
 
 ### jars
 
- * https://jitpack.io/#umjammer/java7-fs-box
+ * https://jitpack.io/#umjammer/vavi-nio-file-box
 
 ### ~~selenium chrome driver~~ (obsolete, use os default browser)
 
@@ -77,3 +68,8 @@ https://github.com/umjammer/vavi-apps-fuse/blob/master/vavi-nio-file-gathered/sr
 ## TODO
 
   * ~~dev token authenticator~~
+  * project name to vavi-nio-file-box
+
+## ⚠ Note to self
+
+ * update `BOX_DEVELOPER_TOKEN` at [github actions secret](https://github.com/umjammer/java7-fs-box/settings/secrets/actions) before deploy
