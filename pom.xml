@@ -5,7 +5,7 @@
 
   <groupId>com.github.fge</groupId>
   <artifactId>vavi-nio-file-box</artifactId>
-  <version>0.1.15v</version>
+  <version>0.1.16</version>
 
   <name>vavi-nio-file-box</name>
   <scm>
