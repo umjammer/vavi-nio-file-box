@@ -68,7 +68,8 @@ https://github.com/umjammer/vavi-apps-fuse/blob/master/vavi-nio-file-gathered/sr
 ## TODO
 
   * ~~dev token authenticator~~
-  * project name to vavi-nio-file-box
+  * ~~project name to vavi-nio-file-box~~
+  * rename main branch
 
 ## ⚠ Note to self
 
