@@ -17,6 +17,9 @@
     <!-- com.github.umjammer -->
     <vavi-nio-file-base.groupId>com.github.umjammer</vavi-nio-file-base.groupId> <!-- com.github.fge / com.github.umjammer -->
     <vavi-nio-file-base.version>0.0.14v</vavi-nio-file-base.version>
+
+    <vavi-nio-file-fuse.groupId>com.github.umjammer</vavi-nio-file-fuse.groupId> <!-- vavi / com.github.umjammer -->
+    <vavi-nio-file-fuse.version>0.0.16</vavi-nio-file-fuse.version>
   </properties>
 
   <profiles>
@@ -183,11 +186,31 @@
       <artifactId>junit-platform-commons</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>${vavi-nio-file-base.groupId}</groupId>
       <artifactId>vavi-nio-file-base</artifactId>
       <version>${vavi-nio-file-base.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>${vavi-nio-file-fuse.groupId}</groupId>
+      <artifactId>vavi-nio-file-fuse</artifactId>
+      <version>${vavi-nio-file-fuse.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>${vavi-nio-file-fuse.groupId}</groupId>
+      <artifactId>vavi-nio-file-fuse</artifactId>
+      <version>${vavi-nio-file-fuse.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
