@@ -5,18 +5,21 @@
 
   <groupId>com.github.fge</groupId>
   <artifactId>vavi-nio-file-box</artifactId>
-  <version>0.1.15v</version>
+  <version>0.1.16</version>
 
-  <name>java7-fs-box</name>
+  <name>vavi-nio-file-box</name>
   <scm>
-    <url>https://github.com/umjammer/java7-fs-box</url>
+    <url>https://github.com/umjammer/vavi-nio-file-box</url>
   </scm>
-  <url>https://github.com/umjammer/java7-fs-box</url>
+  <url>https://github.com/umjammer/vavi-nio-file-box</url>
 
   <properties>
     <!-- com.github.umjammer -->
     <vavi-nio-file-base.groupId>com.github.umjammer</vavi-nio-file-base.groupId> <!-- com.github.fge / com.github.umjammer -->
     <vavi-nio-file-base.version>0.0.14v</vavi-nio-file-base.version>
+
+    <vavi-nio-file-fuse.groupId>com.github.umjammer</vavi-nio-file-fuse.groupId> <!-- vavi / com.github.umjammer -->
+    <vavi-nio-file-fuse.version>0.0.16</vavi-nio-file-fuse.version>
   </properties>
 
   <profiles>
@@ -91,7 +94,7 @@
             <version>3.2.2</version>
             <configuration>
               <argLine>-Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties</argLine>
-              <argLine>-Dvavi.util.logging.VaviFormatter.extraClassMethod="com\.box\.sdk\.BoxLogger#(log|warn)"</argLine>
+              <argLine>-Dvavi.util.logging.VaviFormatter.extraClassMethod=com\\.box\\.sdk\\.BoxLogger#(log|warn)</argLine>
               <trimStackTrace>false</trimStackTrace>
             </configuration>
           </plugin>
@@ -151,21 +154,15 @@
 </dependency>
 
     <dependency>
-      <groupId>com.github.umjammer</groupId>
+      <groupId>${vavi-nio-file-base.groupId}</groupId>
       <artifactId>vavi-nio-file-base</artifactId>
-      <version>0.0.14v</version>
+      <version>${vavi-nio-file-base.version}</version>
     </dependency>
 
     <dependency>
       <groupId>com.github.umjammer.vavi-net-auth</groupId> <!-- vavi / com.github.umjammer.vavi-net-auth -->
       <artifactId>vavi-net-auth-box</artifactId>
       <version>0.1.9</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.eclipse.jetty.websocket</groupId>
-      <artifactId>javax-websocket-client-impl</artifactId>
-      <version>9.4.53.v20231009</version>
     </dependency>
 
     <dependency>
@@ -183,11 +180,31 @@
       <artifactId>junit-platform-commons</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter-params</artifactId>
+      <scope>test</scope>
+    </dependency>
 
     <dependency>
       <groupId>${vavi-nio-file-base.groupId}</groupId>
       <artifactId>vavi-nio-file-base</artifactId>
       <version>${vavi-nio-file-base.version}</version>
+      <type>test-jar</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>${vavi-nio-file-fuse.groupId}</groupId>
+      <artifactId>vavi-nio-file-fuse</artifactId>
+      <version>${vavi-nio-file-fuse.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>${vavi-nio-file-fuse.groupId}</groupId>
+      <artifactId>vavi-nio-file-fuse</artifactId>
+      <version>${vavi-nio-file-fuse.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
     </dependency>
