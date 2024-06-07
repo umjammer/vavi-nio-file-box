@@ -26,5 +26,3 @@ public class BoxWebSocketNotificationProvider implements NotificationProvider {
         return Notification.class.cast(new BoxWebSocketNotification(Consumer.class.cast(callback), args));
     }
 }
-
-/* */

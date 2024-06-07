@@ -5,6 +5,8 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.net.URL;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.AccessMode;
@@ -20,7 +22,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.ParametersAreNonnullByDefault;
@@ -34,7 +35,6 @@ import com.box.sdk.UploadFileCallback;
 import com.github.fge.filesystem.driver.DoubleCachedFileSystemDriver;
 import com.github.fge.filesystem.provider.FileSystemFactoryProvider;
 import vavi.nio.file.Util;
-import vavi.util.Debug;
 
 import static com.github.fge.filesystem.box.BoxFileSystemProvider.ENV_USE_SYSTEM_WATCHER;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -49,13 +49,16 @@ import static vavi.nio.file.Util.toFilenameString;
 @ParametersAreNonnullByDefault
 public final class BoxFileSystemDriver extends DoubleCachedFileSystemDriver<BoxItem.Info> {
 
-    private BoxWatchService systemWatcher;
-    private BoxFolder.Info rootInfo;
+    private static final Logger logger = System.getLogger(BoxFileSystemDriver.class.getName());
 
-    public BoxFileSystemDriver(final FileStore fileStore,
-        FileSystemFactoryProvider factoryProvider,
-        BoxFolder.Info rootInfo,
-        Map<String, ?> env) throws IOException {
+    private BoxWatchService systemWatcher;
+
+    private final BoxFolder.Info rootInfo;
+
+    public BoxFileSystemDriver(FileStore fileStore,
+                               FileSystemFactoryProvider factoryProvider,
+                               BoxFolder.Info rootInfo,
+                               Map<String, ?> env) throws IOException {
 
         super(fileStore, factoryProvider);
         this.rootInfo = Objects.requireNonNull(rootInfo);
@@ -76,26 +79,26 @@ public final class BoxFileSystemDriver extends DoubleCachedFileSystemDriver<BoxI
                 Path path = cache.getEntry(e -> id.equals(e.getID()));
                 cache.removeEntry(path);
             } catch (NoSuchElementException e) {
-Debug.println("NOTIFICATION: already deleted: " + id);
+logger.log(Level.TRACE, "NOTIFICATION: already deleted: " + id);
             }
         } else {
             try {
                 try {
                     Path path = cache.getEntry(e -> id.equals(e.getID()));
-Debug.println("NOTIFICATION: maybe updated: " + path);
+logger.log(Level.TRACE, "NOTIFICATION: maybe updated: " + path);
                     cache.removeEntry(path);
                     cache.getEntry(path);
                 } catch (NoSuchElementException e) {
 // TODO impl
 //                    BoxItem.Info entry = BoxFile.client.files().getMetadata(pathString);
 //                    Path path = parent.resolve(pathString);
-//Debug.println("NOTIFICATION: maybe created: " + path);
+//logger.log(Level.TRACE, "NOTIFICATION: maybe created: " + path);
 //                    cache.addEntry(path, entry);
                 }
             } catch (NoSuchElementException e) {
-Debug.println("NOTIFICATION: parent not found: " + e);
+logger.log(Level.TRACE, "NOTIFICATION: parent not found: " + e);
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.log(Level.ERROR, e.getMessage(), e);
             }
         }
     }
@@ -131,6 +134,7 @@ Debug.println("NOTIFICATION: parent not found: " + e);
         BoxFile file = asFile(entry).getResource();
         URL url = BoxFile.CONTENT_URL_TEMPLATE.build(file.getAPI().getBaseURL(), file.getID());
         BoxAPIRequest request = new BoxAPIRequest(file.getAPI(), url, "GET");
+        @SuppressWarnings("resource") // closed at inner class below
         BoxAPIResponse response = request.send();
         return new BufferedInputStream(new Util.InputStreamForDownloading(response.getBody(null), false) {
             @Override
@@ -159,7 +163,7 @@ Debug.println("NOTIFICATION: parent not found: " + e);
 
     @Override
     protected List<BoxItem.Info> getDirectoryEntries(BoxItem.Info dirEntry, Path dir) throws IOException {
-Debug.println(Level.FINE, dirEntry.getName());
+logger.log(Level.DEBUG, dirEntry.getName());
         Iterable<BoxItem.Info> i = asFolder(dirEntry).getResource().getChildren(ENTRY_FIELDS);
         return StreamSupport.stream(i.spliterator(), false).collect(Collectors.toList()); 
     }
@@ -171,7 +175,7 @@ Debug.println(Level.FINE, dirEntry.getName());
 
     @Override
     protected boolean hasChildren(BoxItem.Info dirEntry, Path dir) throws IOException {
-        return getDirectoryEntries(dir, false).size() > 0;
+        return !getDirectoryEntries(dir, false).isEmpty();
     }
 
     @Override
@@ -200,7 +204,7 @@ Debug.println(Level.FINE, dirEntry.getName());
     @Override
     protected BoxItem.Info moveFolderEntry(BoxItem.Info sourceEntry, BoxItem.Info targetParentEntry, Path source, Path target, boolean targetIsParent) throws IOException {
         BoxItem.Info patchedEntry = asFolder(sourceEntry).getResource().move(asFolder(targetParentEntry).getResource(), toFilenameString(target));
-Debug.println(patchedEntry.getID() + ", " + patchedEntry.getParent().getName() + "/" + patchedEntry.getName());
+logger.log(Level.TRACE, patchedEntry.getID() + ", " + patchedEntry.getParent().getName() + "/" + patchedEntry.getName());
         return patchedEntry;
     }
 
@@ -237,7 +241,7 @@ Debug.println(patchedEntry.getID() + ", " + patchedEntry.getParent().getName() +
             }
         }
 
-        if (set.size() > 0) {
+        if (!set.isEmpty()) {
             throw new AccessDeniedException(path + ": " + set);
         }
     }

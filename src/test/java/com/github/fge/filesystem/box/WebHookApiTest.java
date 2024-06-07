@@ -101,5 +101,3 @@ System.out.println("rm -rf " + newFolderInfo.getName());
         newFolder.delete(true);
     }
 }
-
-/* */

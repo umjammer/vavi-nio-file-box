@@ -41,5 +41,3 @@ public final class BoxTestUserCredential extends BaseLocalUserCredential {
         return password;
     }
 }
-
-/* */

@@ -60,5 +60,3 @@ public final class DummyAppCredential implements OAuth2AppCredential {
         return null;
     }
 }
-
-/* */

@@ -11,18 +11,16 @@ import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
-import com.github.fge.filesystem.box.BoxFileSystemProvider;
-
 import static vavi.nio.file.Base.testAll;
 
 
 /**
- * Main. (box)
+ * All Test. (box)
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (umjammer)
  * @version 0.00 2019/07/11 umjammer initial version <br>
  */
-public class Main {
+class AllTest {
 
     @Test
     void test01() throws Exception {
