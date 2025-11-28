@@ -7,12 +7,20 @@
 package com.github.fge.filesystem.box;
 
 import java.net.URI;
+import java.util.List;
 
-import com.box.sdk.BoxAPIConnection;
-import com.box.sdk.BoxFolder;
-import com.box.sdk.BoxItem;
-import com.box.sdk.BoxWebHook;
-
+import com.box.sdkgen.client.BoxClient;
+import com.box.sdkgen.managers.folders.CreateFolderRequestBody;
+import com.box.sdkgen.managers.folders.CreateFolderRequestBodyParentField;
+import com.box.sdkgen.managers.webhooks.CreateWebhookRequestBody;
+import com.box.sdkgen.managers.webhooks.CreateWebhookRequestBodyTargetField;
+import com.box.sdkgen.managers.webhooks.UpdateWebhookByIdRequestBody;
+import com.box.sdkgen.schemas.folderfull.FolderFull;
+import com.box.sdkgen.schemas.item.Item;
+import com.box.sdkgen.schemas.webhook.Webhook;
+import com.box.sdkgen.schemas.webhook.WebhookTriggersField;
+import com.box.sdkgen.schemas.webhookmini.WebhookMini;
+import com.box.sdkgen.schemas.webhooks.Webhooks;
 import vavi.net.auth.UserCredential;
 import vavi.net.auth.oauth2.OAuth2AppCredential;
 import vavi.net.auth.oauth2.box.BoxLocalAppCredential;
@@ -28,6 +36,7 @@ import vavi.util.Debug;
  * @version 0.00 2020/07/03 umjammer initial version <br>
  * @see "https://app.box.com/developers/console/app/216798/webhooks"
  * @see "https://developer.box.com/guides/webhooks/"
+ * @see "https://github.com/box/box-java-sdk/blob/main/docs/webhooks.md"
  */
 public class WebHookApiTest {
 
@@ -43,61 +52,58 @@ public class WebHookApiTest {
         UserCredential userCredential = new BoxLocalUserCredential(email);
         OAuth2AppCredential appCredential = new BoxLocalAppCredential();
 
-        BoxAPIConnection api = new BoxOAuth2(appCredential).authorize(userCredential);
+        BoxClient client = new BoxOAuth2(appCredential).authorize(userCredential);
 
-        BoxFolder.Info rootInfo = BoxFolder.getRootFolder(api).getInfo();
+        FolderFull rootFolder = client.folders.getFolderById("0");
 
         // create
         URI uri = URI.create(websocketBaseUrl + websocketPath);
         // Listen for file upload events in the specified folder
-        BoxFolder rootFolder = new BoxFolder(api, rootInfo.getID());
-        for (BoxItem.Info i : rootFolder.getChildren()) {
+        for (Item i : rootFolder.getItemCollection().getEntries()) {
             if (i.getName().equals("TEST_WEBHOOK")) {
 System.out.println("rmdir " + i.getName());
-                ((BoxFolder.Info) i).getResource().delete(false);
+                client.folders.deleteFolderById(i.getId());
             }
         }
 System.out.println("mkdir " + "TEST_WEBHOOK");
-        BoxFolder.Info newFolderInfo = rootFolder.createFolder("TEST_WEBHOOK");
-        BoxFolder newFolder = newFolderInfo.getResource();
+        FolderFull newFolder = client.folders.createFolder(new CreateFolderRequestBody.Builder("NEW TEST_WEBHOOK", new CreateFolderRequestBodyParentField(rootFolder.getId())).build());
         // cannot set to root folder!
 System.out.println("[create] webhook");
-        BoxWebHook.Info info = BoxWebHook.create(newFolder, uri.toURL(),
-            BoxWebHook.Trigger.FILE_UPLOADED,
-            BoxWebHook.Trigger.FILE_DELETED,
-            BoxWebHook.Trigger.FILE_RENAMED,
-            BoxWebHook.Trigger.FOLDER_CREATED,
-            BoxWebHook.Trigger.FOLDER_DELETED,
-            BoxWebHook.Trigger.FOLDER_RENAMED
-        );
-Debug.println(info.getID());
+        Webhook info = client.webhooks.createWebhook(new CreateWebhookRequestBody(new CreateWebhookRequestBodyTargetField.Builder().id(newFolder.getId()).build(), uri.toString(), List.of(
+                WebhookTriggersField.FILE_UPLOADED,
+                WebhookTriggersField.FILE_DELETED,
+                WebhookTriggersField.FILE_RENAMED,
+                WebhookTriggersField.FOLDER_CREATED,
+                WebhookTriggersField.FOLDER_DELETED,
+                WebhookTriggersField.FOLDER_RENAMED
+        )));
+Debug.println(info.getId());
 
         // list
 System.out.println("[ls] webhook");
-        BoxWebHook.Info webhookInfo = null;
-        Iterable<BoxWebHook.Info> webhooks = BoxWebHook.all(api);
-        for (BoxWebHook.Info i : webhooks) {
-Debug.println(i.getID());
-            webhookInfo = i;
+        WebhookMini webhookMini = null;
+        Webhooks webhooks = client.webhooks.getWebhooks();
+        for (WebhookMini i : webhooks.getEntries()) {
+Debug.println(i.getId());
+            webhookMini = i;
         }
+        assert webhookMini != null;
 
 System.out.println("mkdir " + "TEST_WEBHOOK/" + "NEW FOLDER");
-        newFolder.createFolder("NEW FOLDER");
+        client.folders.createFolder(new CreateFolderRequestBody.Builder("NEW FOLDER", new CreateFolderRequestBodyParentField(newFolder.getId())).build());
 
         // update
 System.out.println("[update] webhook");
-        BoxWebHook webhook = new BoxWebHook(api, webhookInfo.getID());
-        BoxWebHook.Info preInfo = webhook.getInfo();
-        preInfo.setAddress(uri.toURL()); // same address causes NPE
-        webhook.updateInfo(preInfo);
+        Webhook preInfo = client.webhooks.getWebhookById(webhookMini.getId());
+        client.webhooks.updateWebhookById(preInfo.getId(), new UpdateWebhookByIdRequestBody.Builder().address(uri.toString()).build());
 
         // delete
 System.out.println("[delete] webhook");
-        webhook.delete();
+        client.webhooks.deleteWebhookById(preInfo.getId());
 
         Thread.sleep(5000);
 
-System.out.println("rm -rf " + newFolderInfo.getName());
-        newFolder.delete(true);
+System.out.println("rm -rf " + newFolder.getName());
+        client.folders.deleteFolderById(newFolder.getId());
     }
 }

@@ -10,6 +10,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -24,6 +25,11 @@ import static vavi.nio.file.Base.testAll;
  * @version 0.00 2020/05/01 umjammer initial version <br>
  */
 class TestCase {
+
+    @BeforeEach
+    void setUp() {
+//        System.setProperty("vavi.nio.file.base.wait", "10000");
+    }
 
     /**
      * environment variable

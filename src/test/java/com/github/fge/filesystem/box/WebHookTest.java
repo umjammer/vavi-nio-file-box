@@ -13,12 +13,10 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
 import javax.websocket.ClientEndpoint;
 import javax.websocket.ClientEndpointConfig;
 import javax.websocket.ContainerProvider;
@@ -30,8 +28,7 @@ import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.WebSocketContainer;
 
-import com.box.sdk.BoxAPIConnection;
-
+import com.box.sdkgen.client.BoxClient;
 import vavi.net.auth.oauth2.box.BoxLocalAppCredential;
 import vavi.net.auth.oauth2.box.BoxOAuth2;
 import vavi.net.auth.web.box.BoxLocalUserCredential;
@@ -67,7 +64,7 @@ Debug.println(notification);
 
         @OnError
         public void onError(Throwable t) {
-t.printStackTrace();
+Debug.printStackTrace(t);
         }
 
         @OnClose
@@ -83,7 +80,7 @@ Debug.println("CLOSE");
     public static class AuthorizationConfigurator extends ClientEndpointConfig.Configurator {
         @Override
         public void beforeRequest(Map<String, List<String>> headers) {
-            headers.put("Authorization", Arrays.asList("Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes())));
+            headers.put("Authorization", List.of("Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes())));
         }
     };
 
@@ -92,7 +89,7 @@ Debug.println("CLOSE");
     static String applicationName = System.getenv("APPLICATION_NAME");
 
     static class Service {
-        BoxAPIConnection api;
+        BoxClient client;
         String savedStartPageToken;
         Session session;
 
@@ -100,7 +97,7 @@ Debug.println("CLOSE");
             BoxLocalUserCredential userCredential = new BoxLocalUserCredential(email);
             BoxLocalAppCredential appCredential = new BoxLocalAppCredential();
 
-             api = new BoxOAuth2(appCredential).authorize(userCredential);
+             client = new BoxOAuth2(appCredential).authorize(userCredential);
         }
 
         void start() throws IOException {
@@ -144,7 +141,7 @@ Debug.println("Start");
             service.start();
 
             URI uri = URI.create("box:///?id=" + email);
-            FileSystem fs = FileSystems.newFileSystem(uri, Collections.EMPTY_MAP);
+            FileSystem fs = FileSystems.newFileSystem(uri, Collections.emptyMap());
 
             Path tmpDir = fs.getPath("tmp");
             if (!Files.exists(tmpDir)) {
@@ -164,6 +161,8 @@ System.out.println("cp " + source + " " + remote);
 
 System.out.println("rm " + remote);
             Files.delete(remote);
+
+            fs.close();
         } finally {
             service.stop();
         }

@@ -9,6 +9,7 @@ package com.github.fge.filesystem.box;
 import java.net.URI;
 import java.util.Collections;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static vavi.nio.file.Base.testAll;
@@ -23,6 +24,7 @@ import static vavi.nio.file.Base.testAll;
 class AllTest {
 
     @Test
+    @Disabled("duplicated")
     void test01() throws Exception {
         String email = System.getenv("BOX_TEST_ACCOUNT");
 

@@ -139,19 +139,8 @@
     <dependency>
       <groupId>com.box</groupId>
       <artifactId>box-java-sdk</artifactId>
-      <version>4.7.0</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.bouncycastle</groupId>
-          <artifactId>bcprov-jdk15on</artifactId>
-        </exclusion>
-      </exclusions>
+      <version>10.2.0</version>
     </dependency>
-<dependency>
-  <groupId>org.bouncycastle</groupId>
-  <artifactId>bcprov-jdk18on</artifactId>
-  <version>1.77</version>
-</dependency>
 
     <dependency>
       <groupId>${vavi-nio-file-base.groupId}</groupId>

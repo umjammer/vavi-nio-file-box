@@ -1,21 +1,22 @@
 package com.github.fge.filesystem.box;
 
-import com.box.sdk.BoxFolder;
+import java.io.IOException;
+
+import com.box.sdkgen.client.BoxClient;
 import com.github.fge.filesystem.attributes.FileAttributesFactory;
 import com.github.fge.filesystem.filestore.FileStoreBase;
 
-import java.io.IOException;
 
-public final class BoxFileStore
-    extends FileStoreBase
-{
+public final class BoxFileStore extends FileStoreBase {
+
     private final long totalSize;
 
-    public BoxFileStore(final BoxFolder.Info info,
-        final FileAttributesFactory factory)
-    {
+    private final BoxClient client;
+
+    public BoxFileStore(BoxClient client, FileAttributesFactory factory) {
         super("box", factory, false);
-        totalSize = info.getSize();
+        this.client = client;
+        totalSize = client.users.getUserMe().getSpaceAmount();
     }
 
     /**
@@ -26,9 +27,7 @@ public final class BoxFileStore
      * @throws IOException if an I/O error occurs
      */
     @Override
-    public long getTotalSpace()
-        throws IOException
-    {
+    public long getTotalSpace() throws IOException {
         return totalSize;
     }
 
@@ -48,11 +47,8 @@ public final class BoxFileStore
      * @throws IOException if an I/O error occurs
      */
     @Override
-    public long getUsableSpace()
-        throws IOException
-    {
-        // TODO: can we obtain the total size info?
-        return Long.MAX_VALUE;
+    public long getUsableSpace() throws IOException {
+        return totalSize - client.users.getUserMe().getSpaceUsed();
     }
 
     /**
@@ -69,9 +65,7 @@ public final class BoxFileStore
      * @throws IOException if an I/O error occurs
      */
     @Override
-    public long getUnallocatedSpace()
-        throws IOException
-    {
-        return Long.MAX_VALUE;
+    public long getUnallocatedSpace() throws IOException {
+        return 0;
     }
 }
