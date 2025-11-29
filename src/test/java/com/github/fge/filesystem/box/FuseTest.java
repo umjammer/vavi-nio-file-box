@@ -38,8 +38,8 @@ class FuseTest {
 
     @BeforeEach
     public void before() throws Exception {
-        String email = System.getenv("TEST4_ACCOUNT");
-        mountPoint = System.getenv("TEST4_MOUNT_POINT");
+        String email = System.getenv("TEST_ACCOUNT");
+        mountPoint = System.getenv("TEST_MOUNT_POINT");
 
         URI uri = URI.create("box:///?id=" + email);
 

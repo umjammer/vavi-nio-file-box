@@ -25,7 +25,7 @@ class LargeFileTest {
 
     @Test
     void test01() throws Exception {
-        String email = System.getenv("BOX_TEST_ACCOUNT");
+        String email = System.getenv("TEST_ACCOUNT");
 
         URI uri = URI.create("box:///?id=" + email);
         FileSystem fs = new BoxFileSystemProvider().newFileSystem(uri, Collections.emptyMap());

@@ -1,7 +1,6 @@
 package com.github.fge.filesystem.box;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -51,8 +50,7 @@ import com.box.sdkgen.schemas.item.Item;
 import com.box.sdkgen.schemas.items.Items;
 import com.github.fge.filesystem.driver.DoubleCachedFileSystemDriver;
 import com.github.fge.filesystem.provider.FileSystemFactoryProvider;
-import vavi.io.InputEngine;
-import vavi.io.InputEngineOutputStream;
+import vavi.nio.file.Util;
 
 import static com.github.fge.filesystem.box.BoxFileSystemProvider.ENV_USE_SYSTEM_WATCHER;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_DELETE;
@@ -169,28 +167,17 @@ logger.log(Level.TRACE, "empty folder: " + parentEntry.getName());
 
     @Override
     protected OutputStream uploadEntry(Item parentEntry, Path path, Set<? extends OpenOption> options) throws IOException {
-        // TODO consider more
-        return new BufferedOutputStream(new InputEngineOutputStream(new InputEngine() {
-            InputStream in;
-            Files files;
+        return new Util.OutputStreamForUploading() {
             @Override
-            public void initialize(InputStream in) throws IOException {
-                this.in = in;
-            }
-
-            @Override
-            public void execute() throws IOException {
-                files = client.uploads.uploadFile(new UploadFileRequestBody.Builder(
+            protected void onClosed() throws IOException {
+                InputStream is = getInputStream();
+                Files files = client.uploads.uploadFile(new UploadFileRequestBody.Builder(
                         new UploadFileRequestBodyAttributesField.Builder(toFilenameString(path),
-                                new UploadFileRequestBodyAttributesParentField(parentEntry.getId())).build(), in).build());
-                in.close();
+                                new UploadFileRequestBodyAttributesParentField(parentEntry.getId())).build(), is).build());
+                Item newEntry = new Item(files.getEntries().get(0));
+                updateEntry(path, newEntry);
             }
-
-            @Override
-            public void finish() throws IOException {
-                updateEntry(path, new Item(files.getEntries().get(0)));
-            }
-        }));
+        };
     }
 
     @Override
@@ -239,7 +226,7 @@ logger.log(Level.DEBUG, dirEntry.getName());
     @Override
     protected Item moveFolderEntry(Item sourceEntry, Item targetParentEntry, Path source, Path target, boolean targetIsParent) throws IOException {
         Item patchedEntry = new Item(client.folders.updateFolderById(sourceEntry.getId(), new UpdateFolderByIdRequestBody.Builder().parent(new UpdateFolderByIdRequestBodyParentField.Builder().id(targetParentEntry.getId()).build()).build(), new UpdateFolderByIdQueryParams.Builder().fields(ENTRY_FIELDS).build()));
-logger.log(Level.TRACE, patchedEntry.getId() + ", " + patchedEntry.getFolderFull().getParent().getName() + "/" + patchedEntry.getName());
+logger.log(Level.TRACE, patchedEntry.getId() + ", " + (patchedEntry.getFolderFull().getParent() != null ? patchedEntry.getFolderFull().getParent().getName() : "") + "/" + patchedEntry.getName());
         return patchedEntry;
     }
 
