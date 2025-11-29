@@ -1,14 +1,18 @@
 [![Release](https://jitpack.io/v/umjammer/vavi-nio-file-box.svg)](https://jitpack.io/#umjammer/vavi-nio-file-box)
-[![Java CI](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/vavi-nio-file-box/actions)
+[![Java CI](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/maven.yml)
 [![CodeQL](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/codeql-analysis.yml)
 ![Java](https://img.shields.io/badge/Java-17-b07219)
 [![Parent](https://img.shields.io/badge/Parent-vavi--apps--fuse-pink)](https://github.com/umjammer/vavi-apps-fuse)
 
-## vavi-nio-file-box
+# vavi-nio-file-box
 
-Java filesystem SPI ([JSR-203](https://jcp.org/en/jsr/detail?id=203)) over [DropBox](https://dropbox.com) API.
+<img alt="logo" src="src/test/resources/box.svg" width="100" /> &nbsp;&nbsp;<sub><a href="https://www.box.com/">©️ Box Inc.</a></sub>
 
-[original](https://github.com/fge/java7-fs-box)
+A Java filesystem SPI ([JSR-203](https://jcp.org/en/jsr/detail?id=203)) powered by [DropBox](https://dropbox.com) API.
+
+you can also mount this filesystem using fuse.
+
+this project is based on [original](https://github.com/fge/java7-fs-box)
 
 ## Install
 
@@ -63,14 +67,13 @@ public class Main {
 
 ### See also
 
-https://github.com/umjammer/vavi-apps-fuse/blob/master/vavi-nio-file-gathered/src/test/java/vavi/nio/file/box/Main.java
+https://github.com/umjammer/vavi-nio-file-box/blob/main/src/test/java/com/github/fge/filesystem/box/Main.java
 
+### ⚠️⚠️⚠️ Note to self ⚠️⚠️⚠️
+
+* update `BOX_DEVELOPER_TOKEN` at [github actions secret](https://github.com/umjammer/java7-fs-box/settings/secrets/actions) before deploy
 ## TODO
 
   * ~~dev token authenticator~~
   * ~~project name to vavi-nio-file-box~~
-  * rename main branch
-
-## ⚠ Note to self
-
- * update `BOX_DEVELOPER_TOKEN` at [github actions secret](https://github.com/umjammer/java7-fs-box/settings/secrets/actions) before deploy
+  * ~~rename main branch~~
