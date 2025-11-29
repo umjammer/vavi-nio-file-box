@@ -7,11 +7,11 @@
 package com.github.fge.filesystem.box;
 
 import java.io.IOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 
-import com.box.sdk.BoxFolder;
-
+import com.box.sdkgen.client.BoxClient;
 import vavi.nio.file.watch.webhook.WebHookBaseWatchService;
-import vavi.util.Debug;
 
 
 /**
@@ -28,23 +28,25 @@ import vavi.util.Debug;
  */
 public class BoxWatchService extends WebHookBaseWatchService<String> {
 
+    private static final Logger logger = System.getLogger(BoxWatchService.class.getName());
+
     private static final String WEBHOOK_NOTIFICATION_PROVIDER =
             System.getProperty("vavi.nio.file.watch.webhook.NotificationProvider.box", ".box.webhook.websocket");
 
-//    private BoxFolder.Info client;
+    private BoxClient client;
 
 //    private String savedStartPageToken;
 
     /** */
-    public BoxWatchService(BoxFolder.Info client) throws IOException {
-//        this.client = client;
+    public BoxWatchService(BoxClient client) throws IOException {
+        this.client = client;
 
         setupNotification(this, WEBHOOK_NOTIFICATION_PROVIDER);
     }
 
     @Override
     protected void onNotifyMessage(String notification) throws IOException {
-Debug.println(">> notification: done");
+logger.log(Level.TRACE, ">> notification: done");
     }
 
     @Override

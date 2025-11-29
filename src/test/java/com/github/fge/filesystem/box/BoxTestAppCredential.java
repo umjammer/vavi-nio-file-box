@@ -85,5 +85,3 @@ public final class BoxTestAppCredential extends BaseLocalAppCredential implement
         return scope;
     }
 }
-
-/* */

@@ -3,9 +3,9 @@ package com.github.fge.filesystem.box;
 import com.github.fge.filesystem.driver.DoubleCachedFileSystemDriver;
 import com.github.fge.filesystem.provider.FileSystemProviderBase;
 
-public final class BoxFileSystemProvider
-    extends FileSystemProviderBase
-{
+
+public final class BoxFileSystemProvider extends FileSystemProviderBase {
+
     public static final String PARAM_ID = "id";
 
     public static final String ENV_USER_CREDENTIAL = "user_credential";
@@ -18,8 +18,7 @@ public final class BoxFileSystemProvider
 
     public static final String ENV_DISABLED_FILE_CACHE = DoubleCachedFileSystemDriver.ENV_DISABLED_FILE_CACHE;
 
-    public BoxFileSystemProvider()
-    {
+    public BoxFileSystemProvider() {
         super(new BoxFileSystemRepository());
     }
 }

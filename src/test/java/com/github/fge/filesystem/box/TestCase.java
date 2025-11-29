@@ -10,6 +10,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
@@ -18,12 +19,17 @@ import static vavi.nio.file.Base.testAll;
 
 
 /**
- * Test1.
+ * TestCase.
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (umjammer)
  * @version 0.00 2020/05/01 umjammer initial version <br>
  */
-class Test1 {
+class TestCase {
+
+    @BeforeEach
+    void setUp() {
+//        System.setProperty("vavi.nio.file.base.wait", "10000");
+    }
 
     /**
      * environment variable
@@ -63,6 +69,10 @@ class Test1 {
     void test02() throws Exception {
         System.setProperty("vavi.nio.file.box.BoxFileSystemRepository.oauth2", "vavi.net.auth.oauth2.box.BoxDevOAuth2");
 
+        System.out.println("⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️");
+        System.out.println("⚠️⚠️⚠️ PREPARE DEVELOPER TOKEN https://app.box.com/developers/console/app/216798/configuration ⚠️⚠️⚠️");
+        System.out.println("⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️");
+
         Map<String, Object> env = new HashMap<>();
         env.put(BoxFileSystemProvider.ENV_DISABLED_FILE_CACHE, true);
         env.put(BoxFileSystemProvider.ENV_APP_CREDENTIAL, new DummyAppCredential());
@@ -70,10 +80,9 @@ class Test1 {
 
         URI uri = URI.create("box:///?id=dummy");
 
+        // avoid 401 you need to get developer token see this method javadoc.
         testAll(new BoxFileSystemProvider().newFileSystem(uri, env));
 
         System.setProperty("oAuth2ClassName", "");
     }
 }
-
-/* */

@@ -8,54 +8,50 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.nio.file.attribute.UserPrincipal;
 import java.util.Set;
-
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import com.box.sdk.BoxFile;
-import com.box.sdk.BoxFolder;
-import com.box.sdk.BoxItem;
+import com.box.sdkgen.schemas.item.Item;
 import com.github.fge.filesystem.attributes.provider.BasicFileAttributesProvider;
 
-@ParametersAreNonnullByDefault
-public final class BoxBasicFileAttributesProvider
-    extends BasicFileAttributesProvider implements PosixFileAttributes
-{
-    private final BoxItem.Info entry;
 
-    public BoxBasicFileAttributesProvider(final BoxItem.Info entry)
-        throws IOException
-    {
+@ParametersAreNonnullByDefault
+public final class BoxBasicFileAttributesProvider extends BasicFileAttributesProvider implements PosixFileAttributes {
+    private final Item entry;
+
+    public BoxBasicFileAttributesProvider(final Item entry) throws IOException {
         this.entry = entry;
     }
 
     @Override
-    public FileTime lastModifiedTime()
-    {
-        return entry.getModifiedAt() != null ? FileTime.fromMillis(entry.getModifiedAt().getTime()) : creationTime();
+    public FileTime lastModifiedTime() {
+        if (isRegularFile())
+            return FileTime.from(entry.getFileFull().getModifiedAt().toInstant());
+        else
+            return entry.getFolderFull().getModifiedAt() != null ?  FileTime.from(entry.getFolderFull().getModifiedAt().toInstant()) : FileTime.fromMillis(0);
     }
 
     @Override
-    public FileTime creationTime()
-    {
-        return entry.getCreatedAt() != null ? FileTime.fromMillis(entry.getCreatedAt().getTime()) : UNIX_EPOCH;
+    public FileTime creationTime() {
+        if (isRegularFile())
+            return FileTime.from(entry.getFileFull().getCreatedAt().toInstant());
+        else
+            return FileTime.from(entry.getFolderFull().getCreatedAt().toInstant());
     }
 
     /**
      * Tells whether the file is a regular file with opaque content.
      */
     @Override
-    public boolean isRegularFile()
-    {
-        return BoxFile.Info.class.isInstance(entry);
+    public boolean isRegularFile() {
+        return entry.getType().equals("file");
     }
 
     /**
      * Tells whether the file is a directory.
      */
     @Override
-    public boolean isDirectory()
-    {
-        return BoxFolder.Info.class.isInstance(entry);
+    public boolean isDirectory() {
+        return entry.getType().equals("folder");
     }
 
     /**
@@ -68,9 +64,8 @@ public final class BoxBasicFileAttributesProvider
      * @return the file size, in bytes
      */
     @Override
-    public long size()
-    {
-        return entry.getSize();
+    public long size() {
+        return isRegularFile() ? entry.getFileFull().getSize() : 0;
     }
 
     /* @see java.nio.file.attribute.PosixFileAttributes#owner() */

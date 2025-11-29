@@ -15,11 +15,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 import co.paralleluniverse.javafs.JavaFS;
+import vavi.net.fuse.Base;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import vavi.net.fuse.Base;
 
 
 /**
@@ -29,7 +30,7 @@ import vavi.net.fuse.Base;
  * @version 0.00 2017/03/19 umjammer initial version <br>
  */
 @DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
-public class Main4 {
+class FuseTest {
 
     String mountPoint;
     FileSystem fs;
@@ -37,10 +38,8 @@ public class Main4 {
 
     @BeforeEach
     public void before() throws Exception {
-        System.setProperty("vavi.util.logging.VaviFormatter.extraClassMethod", "co\\.paralleluniverse\\.fuse\\.LoggedFuseFilesystem#log");
-
-        String email = System.getenv("TEST4_ACCOUNT");
-        mountPoint = System.getenv("TEST4_MOUNT_POINT");
+        String email = System.getenv("TEST_ACCOUNT");
+        mountPoint = System.getenv("TEST_MOUNT_POINT");
 
         URI uri = URI.create("box:///?id=" + email);
 
@@ -78,7 +77,7 @@ public class Main4 {
     /**
      * @param args 0: mount point, 1: email
      */
-    public static void main(final String... args) throws IOException {
+    public static void main(String[] args) throws IOException {
         String email = args[1];
 
         Map<String, Object> env = new HashMap<>();
@@ -88,8 +87,9 @@ public class Main4 {
 
         FileSystem fs = new BoxFileSystemProvider().newFileSystem(uri, env);
 
-//        System.setProperty("vavi.net.fuse.FuseProvider.class", "vavi.net.fuse.javafs.JavaFSFuseProvider");
+        System.setProperty("vavi.net.fuse.FuseProvider.class", "vavi.net.fuse.javafs.JavaFSFuseProvider");
 //        System.setProperty("vavi.net.fuse.FuseProvider.class", "vavi.net.fuse.jnrfuse.JnrFuseFuseProvider");
+//        System.setProperty("vavi.net.fuse.FuseProvider.class", "vavi.net.fuse.fusejna.FuseJnaFuseProvider");
 
         Map<String, String> options = new HashMap<>();
         options.put("fsname", "box_fs" + "@" + System.currentTimeMillis());
@@ -97,5 +97,3 @@ public class Main4 {
         JavaFS.mount(fs, Paths.get(args[0]), true, true, options);
     }
 }
-
-/* */

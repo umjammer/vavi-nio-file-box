@@ -23,5 +23,3 @@ public class BoxFileSystemOptionsFactory extends FileSystemOptionsFactory {
         addLinkOption(LinkOption.NOFOLLOW_LINKS);
     }
 }
-
-/* */

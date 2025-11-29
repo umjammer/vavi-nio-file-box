@@ -29,5 +29,3 @@ public final class DummyUserCredential implements UserCredential {
         return null;
     }
 }
-
-/* */
