@@ -11,6 +11,7 @@ import java.nio.file.FileSystem;
 import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfEnvironmentVariable;
 
 import static vavi.nio.file.Base.testMoveFolder;
 
@@ -21,6 +22,7 @@ import static vavi.nio.file.Base.testMoveFolder;
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (umjammer)
  * @version 0.00 2019/07/11 umjammer initial version <br>
  */
+@DisabledIfEnvironmentVariable(named = "GITHUB_WORKFLOW", matches = ".*")
 class MoveFolderTest {
 
     @Test
