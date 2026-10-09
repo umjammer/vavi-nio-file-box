@@ -1,3 +1,4 @@
+native.library.path=/usr/local/lib
 test.client_id=
 test.client_secret=
 test.account=

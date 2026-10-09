@@ -35,7 +35,7 @@ public final class BoxBasicFileAttributesProvider extends BasicFileAttributesPro
         if (isRegularFile())
             return FileTime.from(entry.getFileFull().getCreatedAt().toInstant());
         else
-            return FileTime.from(entry.getFolderFull().getCreatedAt().toInstant());
+            return entry.getFolderFull().getCreatedAt() != null ? FileTime.from(entry.getFolderFull().getCreatedAt().toInstant()) : FileTime.fromMillis(0);
     }
 
     /**

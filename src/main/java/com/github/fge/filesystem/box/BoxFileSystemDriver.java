@@ -31,9 +31,6 @@ import com.box.sdkgen.managers.files.CopyFileRequestBodyParentField;
 import com.box.sdkgen.managers.files.UpdateFileByIdQueryParams;
 import com.box.sdkgen.managers.files.UpdateFileByIdRequestBody;
 import com.box.sdkgen.managers.files.UpdateFileByIdRequestBodyParentField;
-import com.box.sdkgen.managers.folders.CopyFolderQueryParams;
-import com.box.sdkgen.managers.folders.CopyFolderRequestBody;
-import com.box.sdkgen.managers.folders.CopyFolderRequestBodyParentField;
 import com.box.sdkgen.managers.folders.CreateFolderQueryParams;
 import com.box.sdkgen.managers.folders.CreateFolderRequestBody;
 import com.box.sdkgen.managers.folders.CreateFolderRequestBodyParentField;
@@ -208,24 +205,18 @@ logger.log(Level.DEBUG, dirEntry.getName());
 
     @Override
     protected Item copyEntry(Item sourceEntry, Item targetParentEntry, Path source, Path target, Set<CopyOption> options) throws IOException {
-        if (isFolder(sourceEntry))
-            return new Item(client.folders.copyFolder(sourceEntry.getId(), new CopyFolderRequestBody.Builder(new CopyFolderRequestBodyParentField(targetParentEntry.getId())).build(), new CopyFolderQueryParams.Builder().fields(ENTRY_FIELDS).build()));
-        else
-            return new Item(client.files.copyFile(sourceEntry.getId(), new CopyFileRequestBody.Builder(new CopyFileRequestBodyParentField(targetParentEntry.getId())).build(), new CopyFileQueryParams.Builder().fields(ENTRY_FIELDS).build()));
+        // a folder never comes here, the base class creates an empty folder (JSR-203)
+        return new Item(client.files.copyFile(sourceEntry.getId(), new CopyFileRequestBody.Builder(new CopyFileRequestBodyParentField(targetParentEntry.getId())).name(toFilenameString(target)).build(), new CopyFileQueryParams.Builder().fields(ENTRY_FIELDS).build()));
     }
 
     @Override
     protected Item moveEntry(Item sourceEntry, Item targetParentEntry, Path source, Path target, boolean targetIsParent) throws IOException {
-        if (targetIsParent) {
-            return new Item(client.files.updateFileById(sourceEntry.getId(), new UpdateFileByIdRequestBody.Builder().parent(new UpdateFileByIdRequestBodyParentField.Builder().id(targetParentEntry.getId()).build()).build(), new UpdateFileByIdQueryParams.Builder().fields(ENTRY_FIELDS).build()));
-        } else {
-            return new Item(client.files.updateFileById(sourceEntry.getId(), new UpdateFileByIdRequestBody.Builder().parent(new UpdateFileByIdRequestBodyParentField.Builder().id(targetParentEntry.getId()).build()).name(toFilenameString(target)).build(), new UpdateFileByIdQueryParams.Builder().fields(ENTRY_FIELDS).build()));
-        }
+        return new Item(client.files.updateFileById(sourceEntry.getId(), new UpdateFileByIdRequestBody.Builder().parent(new UpdateFileByIdRequestBodyParentField.Builder().id(targetParentEntry.getId()).build()).name(toFilenameString(target)).build(), new UpdateFileByIdQueryParams.Builder().fields(ENTRY_FIELDS).build()));
     }
 
     @Override
     protected Item moveFolderEntry(Item sourceEntry, Item targetParentEntry, Path source, Path target, boolean targetIsParent) throws IOException {
-        Item patchedEntry = new Item(client.folders.updateFolderById(sourceEntry.getId(), new UpdateFolderByIdRequestBody.Builder().parent(new UpdateFolderByIdRequestBodyParentField.Builder().id(targetParentEntry.getId()).build()).build(), new UpdateFolderByIdQueryParams.Builder().fields(ENTRY_FIELDS).build()));
+        Item patchedEntry = new Item(client.folders.updateFolderById(sourceEntry.getId(), new UpdateFolderByIdRequestBody.Builder().parent(new UpdateFolderByIdRequestBodyParentField.Builder().id(targetParentEntry.getId()).build()).name(toFilenameString(target)).build(), new UpdateFolderByIdQueryParams.Builder().fields(ENTRY_FIELDS).build()));
 logger.log(Level.TRACE, patchedEntry.getId() + ", " + (patchedEntry.getFolderFull().getParent() != null ? patchedEntry.getFolderFull().getParent().getName() : "") + "/" + patchedEntry.getName());
         return patchedEntry;
     }

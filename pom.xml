@@ -5,7 +5,7 @@
 
   <groupId>com.github.fge</groupId>
   <artifactId>vavi-nio-file-box</artifactId>
-  <version>0.1.17</version>
+  <version>0.1.18</version>
 
   <name>vavi-nio-file-box</name>
   <scm>
@@ -16,10 +16,12 @@
   <properties>
     <!-- com.github.umjammer -->
     <vavi-nio-file-base.groupId>com.github.umjammer</vavi-nio-file-base.groupId> <!-- com.github.fge / com.github.umjammer -->
-    <vavi-nio-file-base.version>0.0.17</vavi-nio-file-base.version>
+    <vavi-nio-file-base.version>0.0.19</vavi-nio-file-base.version>
 
     <vavi-nio-file-fuse.groupId>com.github.umjammer</vavi-nio-file-fuse.groupId> <!-- vavi / com.github.umjammer -->
-    <vavi-nio-file-fuse.version>0.0.17</vavi-nio-file-fuse.version>
+    <vavi-nio-file-fuse.version>0.0.18</vavi-nio-file-fuse.version>
+
+    <native.library.path>/usr/local/lib</native.library.path>
   </properties>
 
   <profiles>
@@ -71,6 +73,7 @@
               </environmentVariables>
               <argLine>
                 -Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties
+                -Djna.library.path=@{native.library.path}
                 -Dwebdriver.chrome.driver=@{webdriver.chrome.driver}
                 -Dcom.google.chrome.app="@{com.google.chrome.app}"
               </argLine>
@@ -112,7 +115,7 @@
         <artifactId>maven-compiler-plugin</artifactId>
         <version>3.12.1</version>
         <configuration>
-          <release>17</release>
+          <release>25</release>
         </configuration>
       </plugin>
     </plugins>
@@ -130,7 +133,7 @@
       <dependency>
         <groupId>org.junit</groupId>
         <artifactId>junit-bom</artifactId>
-        <version>5.13.4</version>
+        <version>6.1.3</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -141,8 +144,46 @@
     <dependency>
       <groupId>com.box</groupId>
       <artifactId>box-java-sdk</artifactId>
-      <version>10.2.0</version>
+      <version>10.19.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcprov-jdk18on</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.bouncycastle</groupId>
+          <artifactId>bcpkix-jdk18on</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+<dependency>
+  <groupId>com.fasterxml.jackson.core</groupId>
+  <artifactId>jackson-core</artifactId>
+  <version>2.22.3</version>
+</dependency>
+<dependency>
+  <groupId>com.fasterxml.jackson.core</groupId>
+  <artifactId>jackson-databind</artifactId>
+  <version>2.22.3</version>
+</dependency>
+<dependency>
+  <groupId>org.bouncycastle</groupId>
+  <artifactId>bcprov-jdk18on</artifactId>
+  <version>1.86</version>
+</dependency>
+<dependency>
+  <groupId>org.bouncycastle</groupId>
+  <artifactId>bcpkix-jdk18on</artifactId>
+  <version>1.86</version>
+</dependency>
 
     <dependency>
       <groupId>${vavi-nio-file-base.groupId}</groupId>
@@ -153,7 +194,7 @@
     <dependency>
       <groupId>com.github.umjammer.vavi-net-auth</groupId> <!-- vavi / com.github.umjammer.vavi-net-auth -->
       <artifactId>vavi-net-auth-box</artifactId>
-      <version>0.1.15</version>
+      <version>0.1.16</version>
     </dependency>
 
     <dependency>
@@ -183,7 +224,19 @@
       <version>${vavi-nio-file-base.version}</version>
       <type>test-jar</type>
       <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.eclipse.jetty</groupId>
+          <artifactId>jetty-http</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+<dependency>
+  <groupId>org.eclipse.jetty</groupId>
+  <artifactId>jetty-http</artifactId>
+  <version>12.1.14</version>
+  <scope>test</scope>
+</dependency>
 
     <dependency>
       <groupId>${vavi-nio-file-fuse.groupId}</groupId>
