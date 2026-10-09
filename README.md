@@ -1,12 +1,12 @@
 [![Release](https://jitpack.io/v/umjammer/vavi-nio-file-box.svg)](https://jitpack.io/#umjammer/vavi-nio-file-box)
 [![Java CI](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/maven.yml)
 [![CodeQL](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/vavi-nio-file-box/actions/workflows/codeql-analysis.yml)
-![Java](https://img.shields.io/badge/Java-17-b07219)
+![Java](https://img.shields.io/badge/Java-25-b07219)
 [![Parent](https://img.shields.io/badge/Parent-vavi--apps--fuse-pink)](https://github.com/umjammer/vavi-apps-fuse)
 
 # vavi-nio-file-box
 
-<img alt="logo" src="src/test/resources/box.svg" width="100" /> &nbsp;&nbsp;<sub><a href="https://www.box.com/">©️ Box Inc.</a></sub>
+<img alt="logo" src="src/test/resources/duke_box.png" width=160 />
 
 A Java filesystem SPI ([JSR-203](https://jcp.org/en/jsr/detail?id=203)) powered by [DropBox](https://dropbox.com) API.
 
@@ -77,3 +77,7 @@ https://github.com/umjammer/vavi-nio-file-box/blob/main/src/test/java/com/github
   * ~~dev token authenticator~~
   * ~~project name to vavi-nio-file-box~~
   * ~~rename main branch~~
+
+---
+
+<sub>image designed by @umjammer, drawn by nano banana</sub>
