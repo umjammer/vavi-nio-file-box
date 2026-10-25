@@ -14,6 +14,7 @@ import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchService;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -28,12 +29,14 @@ import com.box.sdkgen.client.BoxClient;
 import com.box.sdkgen.managers.files.CopyFileQueryParams;
 import com.box.sdkgen.managers.files.CopyFileRequestBody;
 import com.box.sdkgen.managers.files.CopyFileRequestBodyParentField;
+import com.box.sdkgen.managers.files.GetFileByIdQueryParams;
 import com.box.sdkgen.managers.files.UpdateFileByIdQueryParams;
 import com.box.sdkgen.managers.files.UpdateFileByIdRequestBody;
 import com.box.sdkgen.managers.files.UpdateFileByIdRequestBodyParentField;
 import com.box.sdkgen.managers.folders.CreateFolderQueryParams;
 import com.box.sdkgen.managers.folders.CreateFolderRequestBody;
 import com.box.sdkgen.managers.folders.CreateFolderRequestBodyParentField;
+import com.box.sdkgen.managers.folders.GetFolderByIdQueryParams;
 import com.box.sdkgen.managers.folders.GetFolderItemsQueryParams;
 import com.box.sdkgen.managers.folders.UpdateFolderByIdQueryParams;
 import com.box.sdkgen.managers.folders.UpdateFolderByIdRequestBody;
@@ -104,16 +107,32 @@ logger.log(Level.TRACE, "NOTIFICATION: maybe updated: " + path);
                     cache.removeEntry(path);
                     cache.getEntry(path);
                 } catch (NoSuchElementException e) {
-// TODO impl
-//                    BoxItem entry = BoxFile.client.files().getMetadata(pathString);
-//                    Path path = parent.resolve(pathString);
-//logger.log(Level.TRACE, "NOTIFICATION: maybe created: " + path);
-//                    cache.addEntry(path, entry);
+                    Item entry = getItemById(id);
+                    String parentId = entry.isFileFull() ? entry.getFileFull().getParent().getId() : entry.getFolderFull().getParent().getId();
+                    Path parent = cache.getEntry(f -> parentId.equals(f.getId()));
+                    Path path = parent.resolve(entry.getName());
+logger.log(Level.TRACE, "NOTIFICATION: maybe created: " + path);
+                    cache.addEntry(path, entry);
                 }
             } catch (NoSuchElementException e) {
 logger.log(Level.TRACE, "NOTIFICATION: parent not found: " + e);
-            } catch (IOException e) {
+            } catch (IOException | BoxAPIError e) {
                 logger.log(Level.ERROR, e.getMessage(), e);
+            }
+        }
+    }
+
+    /** for system watcher, the item type is unknown */
+    private Item getItemById(String id) {
+        List<String> fields = new ArrayList<>(ENTRY_FIELDS);
+        fields.add("parent");
+        try {
+            return new Item(client.files.getFileById(id, new GetFileByIdQueryParams.Builder().fields(fields).build()));
+        } catch (BoxAPIError e) {
+            if (e.getResponseInfo() != null && e.getResponseInfo().getStatusCode() == 404) {
+                return new Item(client.folders.getFolderById(id, new GetFolderByIdQueryParams.Builder().fields(fields).build()));
+            } else {
+                throw e;
             }
         }
     }
@@ -259,6 +278,13 @@ logger.log(Level.TRACE, patchedEntry.getId() + ", " + (patchedEntry.getFolderFul
 
         if (!set.isEmpty()) {
             throw new AccessDeniedException(path + ": " + set);
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (systemWatcher != null) {
+            systemWatcher.close();
         }
     }
 
